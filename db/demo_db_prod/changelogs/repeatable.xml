@@ -5,6 +5,12 @@ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.l
     http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd 
     http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-	<includeAll path="changelogs" relativeToChangelogFile="true"/>
+	<changeSet id="select-firstname-person01" author="asmith"
+               runAlways="true" runOnChange="true">
+        <sql>
+            SELECT firstname FROM person_01;
+        </sql>
+        <rollback/>
+    </changeSet>
 
 </databaseChangeLog>

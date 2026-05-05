@@ -251,7 +251,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
 
-          "${LIQUIBASE_BIN}" --log-level=debug "${common_args[@]}" validate 2>&1 | tee "${ART_DIR}/liquibase_validate.log"
+          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" validate 2>&1 | tee "${ART_DIR}/liquibase_validate.log"
 
       - name: "3aa) liquibase checks run"
         shell: bash

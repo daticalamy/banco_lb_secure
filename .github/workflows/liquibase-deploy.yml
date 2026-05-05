@@ -84,8 +84,6 @@ jobs:
           set -euo pipefail
           test -x "${LIQUIBASE_BIN}"
           "${LIQUIBASE_BIN}" --version
-          # test -f "${POSTGRES_JDBC_JAR}"
-          # ls -la "${POSTGRES_JDBC_JAR}"
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4

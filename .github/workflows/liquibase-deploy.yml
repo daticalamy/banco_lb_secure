@@ -240,7 +240,6 @@ jobs:
           mkdir -p "${ART_DIR}"
 
           common_args=(
-            --classpath="${JDBC_JAR}"
             --url="${URL}"
             --username="${DB_USER}"
             --password="${DB_PASSWORD}"
@@ -272,7 +271,6 @@ jobs:
           mkdir -p "${ART_DIR}"
 
           common_args=(
-            --classpath="${JDBC_JAR}"
             --url="${URL}"
             --username="${DB_USER}"
             --password="${DB_PASSWORD}"
@@ -304,7 +302,6 @@ jobs:
           mkdir -p "${ART_DIR}"
   
           common_args=(
-            --classpath="${JDBC_JAR}"
             --url="${URL}"
             --username="${DB_USER}"
             --password="${DB_PASSWORD}"
@@ -336,7 +333,6 @@ jobs:
           mkdir -p "${ART_DIR}"
 
           common_args=(
-            --classpath="${JDBC_JAR}"
             --url="${URL}"
             --username="${DB_USER}"
             --password="${DB_PASSWORD}"
@@ -373,7 +369,6 @@ jobs:
           mkdir -p "${ART_DIR}"
 
           common_args=(
-            --classpath="${JDBC_JAR}"
             --url="${URL}"
             --username="${DB_USER}"
             --password="${DB_PASSWORD}"
@@ -405,7 +400,6 @@ jobs:
           mkdir -p "${ART_DIR}"
 
           common_args=(
-            --classpath="${JDBC_JAR}"
             --url="${URL}"
             --username="${DB_USER}"
             --password="${DB_PASSWORD}"
@@ -448,7 +442,6 @@ jobs:
           mkdir -p "${ART_DIR}"
 
           common_args=(
-            --classpath="${JDBC_JAR}"
             --url="${URL}"
             --username="${DB_USER}"
             --password="${DB_PASSWORD}"

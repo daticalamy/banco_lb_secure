@@ -1,0 +1,472 @@
+name: liquibase-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Seleccione ambiente"
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+      
+      db_name:
+        description: "Nombre de la base de datos"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  LIQUIBASE_BIN: "/opt/liquibase/liquibase"
+  POSTGRES_JDBC_JAR: "/opt/liquibase/lib/postgresql-42.7.8.jar"
+  # DB_NAME : "user-db"
+  # AWS_REGION: "us-east-1"
+  # SECRET_NAME: "deuna/postgres-master-creds--Dmwlar"
+  # role-to-assume: arn:aws:iam::563875027714:role/gha-liquibase-dev-role
+
+jobs:
+  liquibase:
+    name: Run Liquibase against AWS RDS Postgres
+    runs-on: [self-hosted, aws-deuna-liquibase]
+    environment: ${{ inputs.target_env }}
+    timeout-minutes: 60
+
+    env:
+      LB_LOCK_WAIT_MINUTES: "2"
+      FORCE_RELEASE_LOCKS: "false"
+      DB_NAME: ${{ inputs.db_name }}
+      TARGET_ENV: ${{ inputs.target_env }}
+      CTX: "all,${{ inputs.target_env }}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install jq (if needed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v jq >/dev/null 2>&1; then
+            if command -v apt-get >/dev/null 2>&1; then
+              sudo apt-get update -y && sudo apt-get install -y jq
+            elif command -v yum >/dev/null 2>&1; then
+              sudo yum install -y jq
+            elif command -v dnf >/dev/null 2>&1; then
+              sudo dnf install -y jq
+            else
+              echo "No supported package manager (apt/yum/dnf). Install jq manually." && exit 1
+            fi
+          fi
+          jq --version
+
+      - name: Show inputs
+        run: |
+          echo "Environment: $TARGET_ENV"
+          echo "Database: $DB_NAME"
+          
+      - name: "0) Sanity check Liquibase + JDBC"
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x "${LIQUIBASE_BIN}"
+          "${LIQUIBASE_BIN}" --version
+          test -f "${POSTGRES_JDBC_JAR}"
+          ls -la "${POSTGRES_JDBC_JAR}"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Fetch DB params from Secrets Manager -> secrets GH
+        shell: bash
+        env:
+          GH_DB_HOST:     ${{ secrets.DB_HOST }}
+          GH_DB_PORT:     ${{ secrets.DB_PORT }}
+          GH_DB_USER:     ${{ secrets.DB_USER }}
+          GH_DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          SECRET_JSON=""
+          if aws secretsmanager get-secret-value \
+              --secret-id "${{ vars.SECRET_NAME }}" \
+              --query SecretString \
+              --output text >/tmp/secret_string 2>/dev/null; then
+            SECRET_JSON="$(cat /tmp/secret_string)"
+          fi
+ 
+          get_json() {
+            local key="$1"
+            if [ -n "${SECRET_JSON:-}" ] && echo "$SECRET_JSON" | jq -e . >/dev/null 2>&1; then
+              echo "$SECRET_JSON" | jq -r --arg k "$key" '.[$k] // empty'
+            else
+              echo ""
+            fi
+          }
+          DB_HOST="$(get_json host)"
+          DB_PORT="$(get_json port)"
+          DB_USER="$(get_json username)"
+          DB_PASSWORD="$(get_json password)"
+ 
+          [ -n "${DB_HOST:-}" ]     && [ "${DB_HOST:-}" != "null" ]     || DB_HOST="${GH_DB_HOST:-}"
+          [ -n "${DB_PORT:-}" ]     && [ "${DB_PORT:-}" != "null" ]     || DB_PORT="${GH_DB_PORT:-}"
+          [ -n "${DB_USER:-}" ]     && [ "${DB_USER:-}" != "null" ]     || DB_USER="${GH_DB_USER:-}"
+          [ -n "${DB_PASSWORD:-}" ] && [ "${DB_PASSWORD:-}" != "null" ] || DB_PASSWORD="${GH_DB_PASSWORD:-}"
+          missing=0
+          for v in DB_HOST DB_PORT DB_USER DB_PASSWORD; do
+            if [ -z "${!v:-}" ] || [ "${!v:-}" = "null" ]; then
+              echo "ERROR: No se encuentra el parametro requerido: $v (No en AWS Secret, No en GitHub Secrets)" >&2
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+          echo "::add-mask::$DB_HOST"
+          echo "::add-mask::$DB_PORT"
+          echo "::add-mask::$DB_USER"
+          echo "::add-mask::$DB_PASSWORD"
+          {
+            echo "DB_HOST=$DB_HOST"
+            echo "DB_PORT=$DB_PORT"
+            echo "DB_USER=$DB_USER"
+            echo "DB_PASSWORD=$DB_PASSWORD"
+          } >> "$GITHUB_ENV"
+
+      - name: "1) Precheck connectivity (TCP)"
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "==> Connectivity precheck (TCP)"
+          getent hosts "${DB_HOST}" || true
+
+          if timeout 5 bash -c "cat < /dev/null > /dev/tcp/${DB_HOST}/${DB_PORT}" ; then
+            echo "OK: ${DB_HOST}:${DB_PORT} reachable"
+            exit 0
+          fi
+
+          if timeout 5 nc -vz "${DB_HOST}" "${DB_PORT}" ; then
+            echo "OK (nc): ${DB_HOST}:${DB_PORT} reachable"
+            exit 0
+          fi
+
+          echo "FAIL: cannot reach ${DB_HOST}:${DB_PORT}"
+          exit 1
+
+      - name: "Debug: confirm main commit + repo tree"
+        shell: bash
+        run: |
+           set -euo pipefail
+           echo "ref: $GITHUB_REF"
+           echo "sha: $GITHUB_SHA"
+           echo "DB_NAME=$DB_NAME"
+           git --version
+           echo "HEAD:"
+           git rev-parse HEAD
+           echo "Top level:"
+           git rev-parse --show-toplevel
+           echo "Does git tree contain db/${DB_NAME}?"
+           git ls-tree -d --name-only HEAD "db/${DB_NAME}" || true
+ 
+           echo "Does git tree contain db/${DB_NAME}/changelogs?"
+           git ls-tree -d --name-only HEAD "db/${DB_NAME}/changelogs" || true
+ 
+           echo "First 200 paths under db/${DB_NAME}/changelogs:"
+           git ls-tree -r --name-only HEAD "db/${DB_NAME}/changelogs" | sed -n '1,200p'
+           
+      - name: "2) Repo structure sanity"
+        shell: bash
+        run: |
+           set -euo pipefail
+           base="${GITHUB_WORKSPACE}/db/${DB_NAME}"
+           must_file() { [ -f "$1" ] || { echo "MISSING FILE: $1"; exit 1; }; }
+           must_dir() { [ -d "$1" ] || { echo "MISSING DIR : $1"; exit 1; }; }
+           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+           echo "Base path=$base"
+           must_dir "$base"
+           echo "Listing base:"
+           ls -la "$base"
+ 
+           must_dir "$base/changelogs"
+           echo "Listing changelogs:"
+           ls -la "$base/changelogs" || true
+ 
+           echo "DEBUG: changelogs entries (escaped):"
+           for p in "$base/changelogs"/*; do printf ' - %q\n' "$p"; done
+ 
+           # Root file
+           must_file "$base/liquibase_master.xml"
+ 
+           # Changelog files (case-insensitive)
+           incr_file="$(find "$base/changelogs" -maxdepth 1 -type f -iname 'incremental.xml' -print -quit || true)"
+           rep_file="$(find "$base/changelogs" -maxdepth 1 -type f -iname 'repeatable.xml'  -print -quit || true)"
+           [ -n "$incr_file" ] || { echo "MISSING FILE: changelogs/incremental.xml"; exit 1; }
+           [ -n "$rep_file"  ] || { echo "MISSING FILE: changelogs/repeatable.xml"; exit 1; }
+ 
+           # Changelog directories (case-insensitive)
+           incr_dir="$(find "$base/changelogs" -maxdepth 1 -type d -iname 'incremental' -print -quit || true)"
+           rep_dir="$(find "$base/changelogs" -maxdepth 1 -type d -iname 'repeatable'  -print -quit || true)"
+           [ -n "$incr_dir" ] || { echo "MISSING DIR : changelogs/incremental"; exit 1; }
+           [ -n "$rep_dir"  ] || { echo "MISSING DIR : changelogs/repeatable"; exit 1; }
+ 
+           echo "Repo structure sanity check: OK"
+           
+      - name: "3a) Liquibase validate"
+        shell: bash
+        env:
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          CTX: ${{ env.CTX }}
+        run: |
+          set -euo pipefail
+
+          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+
+          cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
+          ART_DIR="${RUNNER_TEMP}/artifacts"
+          mkdir -p "${ART_DIR}"
+
+          common_args=(
+            --classpath="${JDBC_JAR}"
+            --url="${URL}"
+            --username="${DB_USER}"
+            --password="${DB_PASSWORD}"
+            --search-path="."
+            --changelog-file="liquibase_master.xml"
+            --contexts="${CTX}"
+            --default-schema-name=public
+            --liquibase-schema-name=public
+            --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
+          )
+
+          "${LIQUIBASE_BIN}" --log-level=debug "${common_args[@]}" validate 2>&1 | tee "${ART_DIR}/liquibase_validate.log"
+
+      - name: "3aa) liquibase checks run"
+        shell: bash
+        env:
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          CTX: ${{ env.CTX }}
+        run: |
+          set -euo pipefail
+
+          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+
+          cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
+          ART_DIR="${RUNNER_TEMP}/artifacts"
+          mkdir -p "${ART_DIR}"
+
+          common_args=(
+            --classpath="${JDBC_JAR}"
+            --url="${URL}"
+            --username="${DB_USER}"
+            --password="${DB_PASSWORD}"
+            --search-path="."
+            --changelog-file="liquibase_master.xml"
+            --contexts="${CTX}"
+            --default-schema-name=public
+            --liquibase-schema-name=public
+            --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
+          )
+
+          "${LIQUIBASE_BIN}" --log-level=debug "${common_args[@]}" checks run --changeset-filter=PENDING --report-path=reports 2>&1 | tee "${ART_DIR}/liquibase_checks.log"
+
+      - name: "3b) Liquibase status --verbose"
+        shell: bash
+        env:
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          CTX: ${{ env.CTX }}
+        run: |
+          set -euo pipefail
+  
+          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+  
+          cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
+          ART_DIR="${RUNNER_TEMP}/artifacts"
+          mkdir -p "${ART_DIR}"
+  
+          common_args=(
+            --classpath="${JDBC_JAR}"
+            --url="${URL}"
+            --username="${DB_USER}"
+            --password="${DB_PASSWORD}"
+            --search-path="."
+            --changelog-file="liquibase_master.xml"
+            --contexts="${CTX}"
+            --default-schema-name=public
+            --liquibase-schema-name=public
+            --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
+          )
+  
+          "${LIQUIBASE_BIN}" --log-level=debug "${common_args[@]}" status --verbose 2>&1 | tee "${ART_DIR}/liquibase_status.log"
+            
+      - name: "3c) Liquibase updateSql (generate SQL)"
+        shell: bash
+        env:
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          CTX: ${{ env.CTX }}
+        run: |
+          set -euo pipefail
+
+          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+
+          cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
+          ART_DIR="${RUNNER_TEMP}/artifacts"
+          mkdir -p "${ART_DIR}"
+
+          common_args=(
+            --classpath="${JDBC_JAR}"
+            --url="${URL}"
+            --username="${DB_USER}"
+            --password="${DB_PASSWORD}"
+            --search-path="."
+            --changelog-file="liquibase_master.xml"
+            --contexts="${CTX}"
+            --default-schema-name=public
+            --liquibase-schema-name=public
+            --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
+          )
+
+          "${LIQUIBASE_BIN}" --log-level=debug "${common_args[@]}" updateSql \
+            > "${ART_DIR}/liquibase_update.sql" 2> "${ART_DIR}/liquibase_updateSql.log" || {
+              tail -n 200 "${ART_DIR}/liquibase_updateSql.log" || true
+              exit 1
+            }
+
+      - name: "3d) Liquibase releaseLocks (optional)"
+        if: env.FORCE_RELEASE_LOCKS == 'true'
+        shell: bash
+        env:
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          CTX: ${{ env.CTX }}
+        run: |
+          set -euo pipefail
+
+          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+
+          cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
+          ART_DIR="${RUNNER_TEMP}/artifacts"
+          mkdir -p "${ART_DIR}"
+
+          common_args=(
+            --classpath="${JDBC_JAR}"
+            --url="${URL}"
+            --username="${DB_USER}"
+            --password="${DB_PASSWORD}"
+            --search-path="."
+            --changelog-file="liquibase_master.xml"
+            --contexts="${CTX}"
+            --default-schema-name=public
+            --liquibase-schema-name=public
+            --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
+          )
+
+          "${LIQUIBASE_BIN}" --log-level=debug "${common_args[@]}" releaseLocks 2>&1 | tee "${ART_DIR}/liquibase_releaseLocks.log"
+
+      - name: "3e) Liquibase update (apply changes)"
+        shell: bash
+        env:
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          CTX: ${{ env.CTX }}
+        run: |
+          set -euo pipefail
+
+          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+
+          cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
+          ART_DIR="${RUNNER_TEMP}/artifacts"
+          mkdir -p "${ART_DIR}"
+
+          common_args=(
+            --classpath="${JDBC_JAR}"
+            --url="${URL}"
+            --username="${DB_USER}"
+            --password="${DB_PASSWORD}"
+            --search-path="."
+            --changelog-file="liquibase_master.xml"
+            --contexts="${CTX}"
+            --default-schema-name=public
+            --liquibase-schema-name=public
+            --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
+          )
+
+          "${LIQUIBASE_BIN}" \
+            --log-level=info \
+            --reports-enabled=true \
+            --reports-path="${ART_DIR}" \
+            "${common_args[@]}" update \
+            --report-enabled=true \
+            --report-path="${ART_DIR}/liquibase-update-report.html" \
+            1> "${ART_DIR}/liquibase_update.out" \
+            2> "${ART_DIR}/liquibase_update.err" || {
+              tail -n 200 "${ART_DIR}/liquibase_update.err" || true
+              exit 1
+            }
+
+      - name: "3f) Liquibase history"
+        shell: bash
+        env:
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+          CTX: ${{ env.CTX }}
+        run: |
+          set -euo pipefail
+
+          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+
+          cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
+          ART_DIR="${RUNNER_TEMP}/artifacts"
+          mkdir -p "${ART_DIR}"
+
+          common_args=(
+            --classpath="${JDBC_JAR}"
+            --url="${URL}"
+            --username="${DB_USER}"
+            --password="${DB_PASSWORD}"
+            --search-path="."
+            --changelog-file="liquibase_master.xml"
+            --contexts="${CTX}"
+            --default-schema-name=public
+            --liquibase-schema-name=public
+            --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
+          )
+
+          "${LIQUIBASE_BIN}" --log-level=debug "${common_args[@]}" history 2>&1 | tee "${ART_DIR}/liquibase_history.log"
+
+      - name: Upload Liquibase artifacts (logs + SQL)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: liquibase-artifacts
+          path: ${{ runner.temp }}/artifacts
+          if-no-files-found: warn

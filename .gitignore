@@ -1,0 +1,7 @@
+logs/
+liquibase.properties
+reports/
+.liquibase/
+data/
+diffchangelogs/
+generatechangelogs/

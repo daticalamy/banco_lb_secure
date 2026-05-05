@@ -233,7 +233,7 @@ jobs:
           set -euo pipefail
 
           # JDBC_JAR="${POSTGRES_JDBC_JAR}"
-          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
           ART_DIR="${RUNNER_TEMP}/artifacts"
@@ -264,7 +264,7 @@ jobs:
           set -euo pipefail
 
           # JDBC_JAR="${POSTGRES_JDBC_JAR}"
-          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
           ART_DIR="${RUNNER_TEMP}/artifacts"
@@ -295,7 +295,7 @@ jobs:
           set -euo pipefail
   
           # JDBC_JAR="${POSTGRES_JDBC_JAR}"
-          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME
   
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
           ART_DIR="${RUNNER_TEMP}/artifacts"
@@ -326,7 +326,7 @@ jobs:
           set -euo pipefail
 
           # JDBC_JAR="${POSTGRES_JDBC_JAR}"
-          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
           ART_DIR="${RUNNER_TEMP}/artifacts"
@@ -362,7 +362,7 @@ jobs:
           set -euo pipefail
 
           # JDBC_JAR="${POSTGRES_JDBC_JAR}"
-          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
           ART_DIR="${RUNNER_TEMP}/artifacts"
@@ -393,7 +393,7 @@ jobs:
           set -euo pipefail
 
           # JDBC_JAR="${POSTGRES_JDBC_JAR}"
-          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
           ART_DIR="${RUNNER_TEMP}/artifacts"
@@ -435,7 +435,7 @@ jobs:
           set -euo pipefail
 
           # JDBC_JAR="${POSTGRES_JDBC_JAR}"
-          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
+          URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
           ART_DIR="${RUNNER_TEMP}/artifacts"

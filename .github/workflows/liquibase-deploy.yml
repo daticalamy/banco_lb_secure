@@ -24,7 +24,7 @@ permissions:
 env:
   # ASmith: Modified BIN
   LIQUIBASE_BIN: "/opt/liquibase/liquibase/liquibase"
-  POSTGRES_JDBC_JAR: "/opt/liquibase/lib/postgresql-42.7.8.jar"
+  # POSTGRES_JDBC_JAR: "/opt/liquibase/lib/postgresql-42.7.8.jar"
   # DB_NAME : "user-db"
   # AWS_REGION: "us-east-1"
   # SECRET_NAME: "deuna/postgres-master-creds--Dmwlar"
@@ -84,8 +84,8 @@ jobs:
           set -euo pipefail
           test -x "${LIQUIBASE_BIN}"
           "${LIQUIBASE_BIN}" --version
-          test -f "${POSTGRES_JDBC_JAR}"
-          ls -la "${POSTGRES_JDBC_JAR}"
+          # test -f "${POSTGRES_JDBC_JAR}"
+          # ls -la "${POSTGRES_JDBC_JAR}"
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -234,7 +234,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          # JDBC_JAR="${POSTGRES_JDBC_JAR}"
           URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
@@ -266,7 +266,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          # JDBC_JAR="${POSTGRES_JDBC_JAR}"
           URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
@@ -298,7 +298,7 @@ jobs:
         run: |
           set -euo pipefail
   
-          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          # JDBC_JAR="${POSTGRES_JDBC_JAR}"
           URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
   
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
@@ -330,7 +330,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          # JDBC_JAR="${POSTGRES_JDBC_JAR}"
           URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
@@ -367,7 +367,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          # JDBC_JAR="${POSTGRES_JDBC_JAR}"
           URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
@@ -399,7 +399,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          # JDBC_JAR="${POSTGRES_JDBC_JAR}"
           URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
@@ -442,7 +442,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          JDBC_JAR="${POSTGRES_JDBC_JAR}"
+          # JDBC_JAR="${POSTGRES_JDBC_JAR}"
           URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/"$DB_NAME"?sslmode=require"
 
           cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"

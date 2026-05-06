@@ -282,7 +282,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
 
-          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" checks run --changeset-filter=PENDING --report-path=reports 2>&1 | tee "${ART_DIR}/liquibase_checks.log"
+          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" checks run --changeset-filter=PENDING --report-path=reports --checks-settings-file=../liquibase.checks-settings.conf 2>&1 | tee "${ART_DIR}/liquibase_checks.log"
 
       - name: "3b) Liquibase status --verbose"
         shell: bash

@@ -23,7 +23,7 @@ permissions:
 
 env:
   # ASmith: Modified BIN
-  LIQUIBASE_BIN: "/opt/liquibase/liquibase/liquibase"
+  LB_BIN: "/opt/liquibase/liquibase/liquibase"
   # POSTGRES_JDBC_JAR: "/opt/liquibase/lib/postgresql-42.7.8.jar"
   # DB_NAME : "user-db"
   # AWS_REGION: "us-east-1"
@@ -82,8 +82,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -x "${LIQUIBASE_BIN}"
-          "${LIQUIBASE_BIN}" --version
+          test -x "${LB_BIN}"
+          "${LB_BIN}" --version
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -251,7 +251,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
 
-          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" validate 2>&1 | tee "${ART_DIR}/liquibase_validate.log"
+          "${LB_BIN}" --log-level=info "${common_args[@]}" validate 2>&1 | tee "${ART_DIR}/liquibase_validate.log"
 
       - name: "3aa) liquibase checks run"
         shell: bash
@@ -282,7 +282,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
 
-          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" checks run --changeset-filter=PENDING --report-path=reports --checks-settings-file=../liquibase.checks-settings.conf 2>&1 | tee "${ART_DIR}/liquibase_checks.log"
+          "${LB_BIN}" --log-level=info "${common_args[@]}" checks run --changeset-filter=PENDING --report-path=reports --checks-settings-file=../../liquibase.checks-settings.conf 2>&1 | tee "${ART_DIR}/liquibase_checks.log"
 
       - name: "3b) Liquibase status --verbose"
         shell: bash
@@ -313,7 +313,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
   
-          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" status --verbose 2>&1 | tee "${ART_DIR}/liquibase_status.log"
+          "${LB_BIN}" --log-level=info "${common_args[@]}" status --verbose 2>&1 | tee "${ART_DIR}/liquibase_status.log"
             
       - name: "3c) Liquibase updateSql (generate SQL)"
         shell: bash
@@ -344,7 +344,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
 
-          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" updateSql \
+          "${LB_BIN}" --log-level=info "${common_args[@]}" updateSql \
             > "${ART_DIR}/liquibase_update.sql" 2> "${ART_DIR}/liquibase_updateSql.log" || {
               tail -n 200 "${ART_DIR}/liquibase_updateSql.log" || true
               exit 1
@@ -380,7 +380,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
 
-          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" releaseLocks 2>&1 | tee "${ART_DIR}/liquibase_releaseLocks.log"
+          "${LB_BIN}" --log-level=info "${common_args[@]}" releaseLocks 2>&1 | tee "${ART_DIR}/liquibase_releaseLocks.log"
 
       - name: "3e) Liquibase update (apply changes)"
         shell: bash
@@ -411,7 +411,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
 
-          "${LIQUIBASE_BIN}" \
+          "${LB_BIN}" \
             --log-level=info \
             --reports-enabled=true \
             --reports-path="${ART_DIR}" \
@@ -453,7 +453,7 @@ jobs:
             --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
           )
 
-          "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" history 2>&1 | tee "${ART_DIR}/liquibase_history.log"
+          "${LB_BIN}" --log-level=info "${common_args[@]}" history 2>&1 | tee "${ART_DIR}/liquibase_history.log"
 
       - name: Upload Liquibase artifacts (logs + SQL)
         if: always()

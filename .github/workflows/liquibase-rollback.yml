@@ -243,7 +243,7 @@ jobs:
               exit 1
             fi
    
-            URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require"
+            URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
             ART_DIR="${RUNNER_TEMP}/artifacts"
             mkdir -p "${ART_DIR}"
    

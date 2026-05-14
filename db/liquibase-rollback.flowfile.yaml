@@ -37,7 +37,7 @@ stages:
   Rollback-Count:
     actions:
       - type: liquibase
-        if: "${ROLLBACK_TYPE} == rollback_count"
+        if: "${ROLLBACK_TYPE} == 'rollback_count'"
         command: rollback-count
         cmdArgs: { count: "${ROLLBACK_COUNT}" }
         globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-count-report.html" }

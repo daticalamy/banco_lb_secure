@@ -24,6 +24,14 @@ permissions:
 env:
   # ASmith: Modified BIN
   LB_BIN: "/opt/liquibase/liquibase/liquibase"
+  LIQUIBASE_COMMAND_URL: "${URL}"
+  LIQUIBASE_COMMAND_USERNAME: "${DB_USER}"
+  LIQUIBASE_COMMAND_PASSWORD: "${DB_PASSWORD}"
+  LIQUIBASE_SEARCH_PATH: "."
+  LIQUIBASE_COMMAND_CHANGELOG_FILE: "${CHANGELOG_FILE}"
+  LIQUIBASE_COMMAND_DEFAULT_SCHEMA_NAME: "public"
+  LIQUIBASE_LIQUIBASE_SCHEMA_NAME: "public"
+  LIQUIBASE_CHANGELOG_LOCK_WAIT_TIME_IN_MINUTES: "${LB_LOCK_WAIT_MINUTES}
 
 jobs:
   liquibase:
@@ -249,23 +257,12 @@ jobs:
    
             cd "${WORKDIR}"
    
-            common_args=(
-              --url="${URL}"
-              --username="${DB_USER}"
-              --password="${DB_PASSWORD}"
-              --search-path="."
-              --changelog-file="${CHANGELOG_FILE}"
-              --default-schema-name=public
-              --liquibase-schema-name=public
-              --changelog-lock-wait-time-in-minutes="${LB_LOCK_WAIT_MINUTES}"
-            )
-   
             echo "==> Liquibase history (before)"
-            "${LB_BIN}" --log-level=info "${common_args[@]}" history \
+            "${LB_BIN}" --log-level=info history \
               2>&1 | tee "${ART_DIR}/liquibase_history_before.log"
    
             echo "==> Liquibase rollbackCount ${ROLLBACK_COUNT}"
-            "${LB_BIN}" --log-level=info "${common_args[@]}" rollbackCount "${ROLLBACK_COUNT}" \
+            "${LB_BIN}" --log-level=info rollbackCount "${ROLLBACK_COUNT}" \
               1> "${ART_DIR}/liquibase_rollback.out" \
               2> "${ART_DIR}/liquibase_rollback.err" || {
                 echo "Rollback failed. Tail error:"
@@ -274,7 +271,7 @@ jobs:
               }
    
             echo "==> Liquibase history (after)"
-            "${LB_BIN}" --log-level=info "${common_args[@]}" history \
+            "${LB_BIN}" --log-level=info history \
               2>&1 | tee "${ART_DIR}/liquibase_history_after.log"
    
             # HTML report (optional but enabled here)

@@ -16,6 +16,7 @@ stages:
     actions:
       - type: shell
         command: |
+          set +x
           echo "Rollback type: ${ROLLBACK_TYPE}"
           if [ "${ROLLBACK_TYPE}" == "rollback_count" ]; then
             echo "Rollback count: ${ROLLBACK_COUNT}"

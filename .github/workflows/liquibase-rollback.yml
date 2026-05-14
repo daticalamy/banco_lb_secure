@@ -105,7 +105,12 @@ jobs:
         run: |
           echo "Environment: $TARGET_ENV"
           echo "Database: $DB_NAME"
+          echo "Rollback type: $ROLLBACK_TYPE"
           echo "RollbackCount: $ROLLBACK_COUNT"
+          echo "RollbackTag: $ROLLBACK_TAG"
+          echo "RollbackChangesetId: $ROLLBACK_CHANGESET_ID"
+          echo "RollbackChangesetAuthor: $ROLLBACK_CHANGESET_AUTHOR"
+          echo "RollbackChangesetPath: $ROLLBACK_CHANGESET_PATH"
  
       - name: "Sanity check Liquibase + JDBC"
         shell: bash
@@ -244,7 +249,7 @@ jobs:
  
            echo "Repo structure sanity check: OK"
 
-      - name: Rollback (history before + rollbackCount + history after)
+      - name: Rollback (history before + rollback + history after)
         shell: bash
         run: |
             set -euo pipefail

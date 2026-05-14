@@ -56,4 +56,4 @@ endStage:
   actions:
   - type: liquibase
     command: history
-    globalArgs: { output-file: "${ART_DIR}/liquibase_history_after.log" }
+    # globalArgs: { output-file: "${ART_DIR}/liquibase_history_after.log" }

@@ -23,7 +23,7 @@ permissions:
 
 env:
   # ASmith: Modified BIN
-  LIQUIBASE_BIN: "/opt/liquibase/liquibase/liquibase"
+  LB_BIN: "/opt/liquibase/liquibase/liquibase"
 
 jobs:
   liquibase:
@@ -82,8 +82,8 @@ jobs:
           
           set -euo pipefail
           
-          test -x "${LIQUIBASE_BIN}"
-          "${LIQUIBASE_BIN}" --version
+          test -x "${LB_BIN}"
+          "${LB_BIN}" --version
  
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -261,11 +261,11 @@ jobs:
             )
    
             echo "==> Liquibase history (before)"
-            "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" history \
+            "${LB_BIN}" --log-level=info "${common_args[@]}" history \
               2>&1 | tee "${ART_DIR}/liquibase_history_before.log"
    
             echo "==> Liquibase rollbackCount ${ROLLBACK_COUNT}"
-            "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" rollbackCount "${ROLLBACK_COUNT}" \
+            "${LB_BIN}" --log-level=info "${common_args[@]}" rollbackCount "${ROLLBACK_COUNT}" \
               1> "${ART_DIR}/liquibase_rollback.out" \
               2> "${ART_DIR}/liquibase_rollback.err" || {
                 echo "Rollback failed. Tail error:"
@@ -274,11 +274,11 @@ jobs:
               }
    
             echo "==> Liquibase history (after)"
-            "${LIQUIBASE_BIN}" --log-level=info "${common_args[@]}" history \
+            "${LB_BIN}" --log-level=info "${common_args[@]}" history \
               2>&1 | tee "${ART_DIR}/liquibase_history_after.log"
    
             # HTML report (optional but enabled here)
-            "${LIQUIBASE_BIN}" --log-level=info \
+            "${LB_BIN}" --log-level=info \
               --reports-enabled=true \
               --report-path="${ART_DIR}/liquibase_history_after.html" \
               "${common_args[@]}" history >/dev/null

@@ -4,7 +4,7 @@
 globalVariables:
   ROLLBACK_TYPE: ${ROLLBACK_TYPE}
   ROLLBACK_COUNT: ${ROLLBACK_COUNT:-0}
-  ROLLBACK_TAG: ${ROLLBACK_TAG:-""}
+  ROLLBACK_DEPLOYMENT_ID: ${ROLLBACK_DEPLOYMENT_ID:-""}
   CHANGESET_ID: ${LB_CHANGESET_ID:-""}
   CHANGESET_AUTHOR: ${LB_CHANGESET_AUTHOR:-""}
   CHANGESET_PATH: ${LB_CHANGESET_PATH:-""}
@@ -26,13 +26,13 @@ stages:
         cmdArgs: { count: "${ROLLBACK_COUNT}" }
         globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-count-report.html" }
 
-  Rollback-To-Tag:
+  Rollback-One-Update:
     actions:
       - type: liquibase
-        if: "${ROLLBACK_TYPE} == 'rollback_to_tag'"
-        command: rollback
-        cmdArgs: {tag: "${ROLLBACK_TAG}"}
-        globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-to-tag-report.html" }
+        if: "${ROLLBACK_TYPE} == 'rollback_one_update'"
+        command: rollback-one-update
+        cmdArgs: {deployment-id: "${ROLLBACK_DEPLOYMENT_ID}", force: "true" }
+        globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-one-update-report.html" }
 
   Rollback-One-Changeset:
     actions:

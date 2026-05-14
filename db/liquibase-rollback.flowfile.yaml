@@ -29,9 +29,15 @@ stages:
   Rollback-One-Update:
     actions:
       - type: liquibase
-        if: "${ROLLBACK_TYPE} == 'rollback_one_update'"
+        if: "${ROLLBACK_TYPE} == 'rollback_one_update' && ${ROLLBACK_DEPLOYMENT_ID} != ''"
         command: rollback-one-update
         cmdArgs: {deployment-id: "${ROLLBACK_DEPLOYMENT_ID}", force: "true" }
+        globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-one-update-report.html" }
+
+      - type: liquibase
+        if: "${ROLLBACK_TYPE} == 'rollback_one_update' && ${ROLLBACK_DEPLOYMENT_ID} == ''"
+        command: rollback-one-update
+        cmdArgs: { force: "true" }
         globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-one-update-report.html" }
 
   Rollback-One-Changeset:

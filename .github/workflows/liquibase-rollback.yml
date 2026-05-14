@@ -13,14 +13,30 @@ on:
         required: true
         type: string
       rollback_type:
-        description: "Cantidad de changesets a revertir (rollbackCount N)"
+        description: "Tipo de reversión"
         required: true
         type: choice
         options: [rollback_count,rollback_to_tag,rollback_one_changeset]
       rollback_count:
-        description: "Cantidad de changesets a revertir (rollbackCount N)"
-        required: true
+        description: "Cantidad de changesets a revertir (rollback count)"
+        required: false
         type: number
+      rollback_tag:
+        description: "Etiqueta para reversión (rollback to tag)"
+        required: false
+        type: string
+      rollback_changeset_id:
+        description: "ID del changeset para reversión (rollback one changeset)"
+        required: false
+        type: string
+      rollback_changeset_author:
+        description: "Autor del changeset para reversión (rollback one changeset)"
+        required: false
+        type: string
+      rollback_changeset_path:
+        description: "Ruta del changeset para reversión (rollback one changeset)"
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -30,7 +46,6 @@ env:
   # ASmith: Modified BIN
   DB_NAME: ${{ inputs.db_name }}
   TARGET_ENV: ${{ inputs.target_env }}
-  ROLLBACK_COUNT: ${{ inputs.rollback_count }}
   LB_BIN: "/opt/liquibase/liquibase/liquibase"
   LIQUIBASE_SEARCH_PATH: "."
   LIQUIBASE_COMMAND_CHANGELOG_FILE: "liquibase_master.xml"
@@ -41,6 +56,11 @@ env:
   LIQUIBASE_MIRROR_OUTPUT_TO_CONSOLE: true
   LIQUIBASE_LOG_LEVEL: "INFO"
   ROLLBACK_TYPE: ${{ inputs.rollback_type }}
+  ROLLBACK_COUNT: ${{ inputs.rollback_count }}
+  ROLLBACK_TAG: ${{ inputs.rollback_tag }}
+  ROLLBACK_CHANGESET_ID: ${{ inputs.rollback_changeset_id }}
+  ROLLBACK_CHANGESET_AUTHOR: ${{ inputs.rollback_changeset_author }}
+  ROLLBACK_CHANGESET_PATH: ${{ inputs.rollback_changeset_path }}
 
 jobs:
   liquibase:

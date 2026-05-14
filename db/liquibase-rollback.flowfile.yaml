@@ -45,7 +45,7 @@ stages:
   Rollback-To-Tag:
     actions:
       - type: liquibase
-        if: "${ROLLBACK_TYPE} == rollback_to_tag"
+        if: "${ROLLBACK_TYPE} == 'rollback_to_tag'"
         command: rollback
         cmdArgs: {tag: "${TAG}"}
         globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-to-tag-report.html" }
@@ -53,7 +53,7 @@ stages:
   Rollback-One-Changeset:
     actions:
       - type: liquibase
-        if: "${ROLLBACK_TYPE} == rollback_one_changeset"
+        if: "${ROLLBACK_TYPE} == 'rollback_one_changeset'"
         command: rollback-one-changeset
         cmdArgs: { changeset-author: "${CHANGESET_AUTHOR}", changeset-id: "${CHANGESET_ID}", changeset-path: "${CHANGESET_PATH}", force: "true" }
         globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-one-changeset-report.html" }

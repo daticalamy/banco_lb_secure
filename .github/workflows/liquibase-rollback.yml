@@ -114,15 +114,15 @@ jobs:
               exit 1
             fi
           elif [ "${ROLLBACK_TYPE}" == "rollback_to_tag" ]; then
-            echo "Rollback to tag: ${TAG}"
-            if [ -z "${TAG}" ]; then
-              echo "ERROR: TAG must not be empty."
+            echo "Rollback to tag: ${ROLLBACK_TAG}"
+            if [ -z "${ROLLBACK_TAG}" ]; then
+              echo "ERROR: ROLLBACK_TAG must not be empty."
               exit 1
             fi
           elif [ "${ROLLBACK_TYPE}" == "rollback_one_changeset" ]; then
-            echo "Rollback one changeset - Author: ${CHANGESET_AUTHOR}, ID: ${CHANGESET_ID}, Path: ${CHANGESET_PATH}"
-            if [ -z "${CHANGESET_AUTHOR}" ] || [ -z "${CHANGESET_ID}" ] || [ -z "${CHANGESET_PATH}" ]; then
-              echo "ERROR: CHANGESET_AUTHOR, CHANGESET_ID, and CHANGESET_PATH must all be non-empty."
+            echo "Rollback one changeset - Author: ${ROLLBACK_CHANGESET_AUTHOR}, ID: ${ROLLBACK_CHANGESET_ID}, Path: ${ROLLBACK_CHANGESET_PATH}"
+            if [ -z "${ROLLBACK_CHANGESET_AUTHOR}" ] || [ -z "${ROLLBACK_CHANGESET_ID}" ] || [ -z "${ROLLBACK_CHANGESET_PATH}" ]; then
+              echo "ERROR: ROLLBACK_CHANGESET_AUTHOR, ROLLBACK_CHANGESET_ID, and ROLLBACK_CHANGESET_PATH must all be non-empty."
               exit 1
             fi
           else

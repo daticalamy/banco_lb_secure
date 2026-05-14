@@ -22,8 +22,8 @@ permissions:
   contents: read
 
 env:
-  LIQUIBASE_BIN: "/opt/liquibase/liquibase"
-  POSTGRES_JDBC_JAR: "/opt/liquibase/lib/postgresql-42.7.8.jar"
+  # ASmith: Modified BIN
+  LIQUIBASE_BIN: "/opt/liquibase/liquibase/liquibase"
 
 jobs:
   liquibase:
@@ -84,8 +84,6 @@ jobs:
           
           test -x "${LIQUIBASE_BIN}"
           "${LIQUIBASE_BIN}" --version
-          test -f "${POSTGRES_JDBC_JAR}"
-          ls -la "${POSTGRES_JDBC_JAR}"
  
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -252,7 +250,6 @@ jobs:
             cd "${WORKDIR}"
    
             common_args=(
-              --classpath="${POSTGRES_JDBC_JAR}"
               --url="${URL}"
               --username="${DB_USER}"
               --password="${DB_PASSWORD}"

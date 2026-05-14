@@ -5,6 +5,7 @@ globalVariables:
   TAG: ${LB_TAG:-""}
   ENV: ${ENVIRONMENT}
   ROLLBACK_TYPE: ${ROLLBACK_TYPE}
+  ROLLBACK_COUNT: ${ROLLBACK_COUNT}
   CHANGESET_ID: ${LB_CHANGESET_ID:-""}
   CHANGESET_AUTHOR: ${LB_CHANGESET_AUTHOR:-""}
   CHANGESET_PATH: ${LB_CHANGESET_PATH:-""}
@@ -17,13 +18,13 @@ stages:
         command: history
         globalArgs: { output-file: "${ART_DIR}/liquibase_history_before.log" }
 
-  Rollback-To-Tag-SQL:
+  Rollback-Count:
     actions:
       - type: liquibase
-        if: "${ROLLBACK_TYPE} == rollback_to_tag"
-        command: rollback-sql
-        cmdArgs: {tag: "${TAG}"}
-        globalArgs: { reports-name: "${ENV}-rollback-sql-report.html" }
+        if: "${ROLLBACK_TYPE} == rollback_count"
+        command: rollback-count
+        cmdArgs: { count: "${ROLLBACK_COUNT}" }
+        globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-count-report.html" }
 
   Rollback-To-Tag:
     actions:
@@ -32,14 +33,6 @@ stages:
         command: rollback
         cmdArgs: {tag: "${TAG}"}
         globalArgs: { reports-name: "${ENV}-rollback-report.html" }
-
-  Rollback-One-Changeset-SQL:
-    actions:
-      - type: liquibase
-        if: "${ROLLBACK_TYPE} == rollback_one_changeset"
-        command: rollback-one-changeset-sql
-        cmdArgs: { changeset-author: "${CHANGESET_AUTHOR}", changeset-id: "${CHANGESET_ID}", changeset-path: "${CHANGESET_PATH}" }
-        globalArgs: { reports-name: "${ENV}-rollback-sql-report.html" }
 
   Rollback-One-Changeset:
     actions:

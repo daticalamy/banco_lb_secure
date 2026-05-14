@@ -12,6 +12,11 @@ on:
         description: "Nombre de la base de datos"
         required: true
         type: string
+      rollback_type:
+        description: "Cantidad de changesets a revertir (rollbackCount N)"
+        required: true
+        type: choice
+        options: [rollback_count,rollback_to_tag,rollback_one_changeset]
       rollback_count:
         description: "Cantidad de changesets a revertir (rollbackCount N)"
         required: true
@@ -35,6 +40,7 @@ env:
   LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
   LIQUIBASE_MIRROR_OUTPUT_TO_CONSOLE: "true"
   LIQUIBASE_LOG_LEVEL: "INFO"
+  ROLLBACK_TYPE: ${{ inputs.rollback_type }}
 
 jobs:
   liquibase:

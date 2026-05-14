@@ -15,4 +15,14 @@ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.l
         </createTable>  
     </changeSet> 
 
+    <changeSet  id="2"  author="asmith">  
+        <createTable  tableName="person_02">  
+            <column  name="id"  type="int"  autoIncrement="true">  
+                <constraints  primaryKey="true"  nullable="false"/>  
+            </column>  
+            <column  name="firstname"  type="varchar(50)"/>  
+            <column  name="lastname"  type="varchar(50)"/>  
+        </createTable>  
+    </changeSet> 
+
 </databaseChangeLog>

@@ -100,7 +100,7 @@ jobs:
           
           jq --version
         
-      - name: Validate inputs
+      - name: Validate Rollback inputs
         shell: bash
         run: |
           echo "Environment: $TARGET_ENV"

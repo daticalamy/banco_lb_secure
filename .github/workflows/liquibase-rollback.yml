@@ -23,15 +23,16 @@ permissions:
 
 env:
   # ASmith: Modified BIN
+  DB_NAME: ${{ inputs.db_name }}
+  TARGET_ENV: ${{ inputs.target_env }}
+  ROLLBACK_COUNT: ${{ inputs.rollback_count }}
   LB_BIN: "/opt/liquibase/liquibase/liquibase"
-  LIQUIBASE_COMMAND_URL: "${URL}"
-  LIQUIBASE_COMMAND_USERNAME: "${DB_USER}"
-  LIQUIBASE_COMMAND_PASSWORD: "${DB_PASSWORD}"
   LIQUIBASE_SEARCH_PATH: "."
-  LIQUIBASE_COMMAND_CHANGELOG_FILE: "${CHANGELOG_FILE}"
+  LIQUIBASE_COMMAND_CHANGELOG_FILE: "liquibase_master.xml"
   LIQUIBASE_COMMAND_DEFAULT_SCHEMA_NAME: "public"
   LIQUIBASE_LIQUIBASE_SCHEMA_NAME: "public"
   LIQUIBASE_CHANGELOG_LOCK_WAIT_TIME_IN_MINUTES: 2
+  LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
 
 jobs:
   liquibase:
@@ -39,11 +40,6 @@ jobs:
     runs-on: [self-hosted, aws-deuna-liquibase]
     environment: ${{ inputs.target_env }}
     timeout-minutes: 60
-
-    env:
-      DB_NAME: ${{ inputs.db_name }}
-      TARGET_ENV: ${{ inputs.target_env }}
-      ROLLBACK_COUNT: ${{ inputs.rollback_count }}
 
     steps:
       - name: Checkout
@@ -222,12 +218,13 @@ jobs:
 
       - name: Rollback (history before + rollbackCount + history after)
         shell: bash
-        env:
-            LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
-            CHANGELOG_FILE: liquibase_master.xml
         run: |
             set -euo pipefail
    
+            LIQUIBASE_COMMAND_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
+            LIQUIBASE_COMMAND_USERNAME="${DB_USER}"
+            LIQUIBASE_COMMAND_PASSWORD="${DB_PASSWORD}"
+
             if [ "${ROLLBACK_COUNT}" -lt 1 ]; then
               echo "ERROR: rollback_count debe ser >= 1"
               exit 1

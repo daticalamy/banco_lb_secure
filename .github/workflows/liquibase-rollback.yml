@@ -257,6 +257,7 @@ jobs:
    
             ART_DIR="${RUNNER_TEMP}/artifacts"
             mkdir -p "${ART_DIR}"
+            export ART_DIR="${ART_DIR}"
    
             cd "${WORKDIR}"
             liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml

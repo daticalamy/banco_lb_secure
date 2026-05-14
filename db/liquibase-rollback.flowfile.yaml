@@ -3,7 +3,6 @@
 
 globalVariables:
   TAG: ${LB_TAG:-""}
-  ENV: ${ENVIRONMENT}
   ROLLBACK_TYPE: ${ROLLBACK_TYPE}
   ROLLBACK_COUNT: ${ROLLBACK_COUNT}
   CHANGESET_ID: ${LB_CHANGESET_ID:-""}
@@ -32,7 +31,7 @@ stages:
         if: "${ROLLBACK_TYPE} == rollback_to_tag"
         command: rollback
         cmdArgs: {tag: "${TAG}"}
-        globalArgs: { reports-name: "${ENV}-rollback-report.html" }
+        globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-to-tag-report.html" }
 
   Rollback-One-Changeset:
     actions:
@@ -40,7 +39,7 @@ stages:
         if: "${ROLLBACK_TYPE} == rollback_one_changeset"
         command: rollback-one-changeset
         cmdArgs: { changeset-author: "${CHANGESET_AUTHOR}", changeset-id: "${CHANGESET_ID}", changeset-path: "${CHANGESET_PATH}", force: "true" }
-        globalArgs: { reports-name: "${ENV}-rollback-report.html" }
+        globalArgs: { reports-path: "${ART_DIR}", reports-name: "rollback-one-changeset-report.html" }
   
   ## The endStage ALWAYS RUNS. 
   ## So put actions here which you desire to perform whether previous stages' actions succeed or fail.

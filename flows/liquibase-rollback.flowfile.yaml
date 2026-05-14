@@ -8,12 +8,14 @@ globalVariables:
   CHANGESET_ID: ${LB_CHANGESET_ID:-""}
   CHANGESET_AUTHOR: ${LB_CHANGESET_AUTHOR:-""}
   CHANGESET_PATH: ${LB_CHANGESET_PATH:-""}
+  ART_DIR: ${ART_DIR}
 
 stages:
   History-before-Rollback:
     actions:
       - type: liquibase
         command: history
+        globalArgs: { output-file: "${ART_DIR}/liquibase_history_before.log" }
 
   Rollback-To-Tag-SQL:
     actions:
@@ -55,11 +57,4 @@ endStage:
   actions:
   - type: liquibase
     command: history
-
-  - type: liquibase
-    command: snapshot
-    cmdArgs: {  snapshot-format: json, schemas: "${SCHEMAS}"}
-    globalArgs: { output-file: 's3://${BUCKET}/oracleSnapshots/${ENV}-snapshot.json' }
-        
-  - type: shell
-    command: echo 'Updated snapshot saved to s3://${BUCKET}/oracleSnapshots/${ENV}-snapshot.json'
+    globalArgs: { output-file: "${ART_DIR}/liquibase_history_after.log" }

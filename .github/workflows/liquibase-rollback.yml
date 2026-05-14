@@ -33,6 +33,8 @@ env:
   LIQUIBASE_LIQUIBASE_SCHEMA_NAME: "public"
   LIQUIBASE_CHANGELOG_LOCK_WAIT_TIME_IN_MINUTES: 2
   LIQUIBASE_LICENSE_KEY: ${{ secrets.LIQUIBASE_LICENSE_KEY }}
+  LIQUIBASE_MIRROR_OUTPUT_TO_CONSOLE: "true"
+  LIQUIBASE_LOG_LEVEL: "INFO"
 
 jobs:
   liquibase:
@@ -247,34 +249,20 @@ jobs:
               exit 1
             fi
    
-            URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
             ART_DIR="${RUNNER_TEMP}/artifacts"
             mkdir -p "${ART_DIR}"
    
             cd "${WORKDIR}"
+            liquibase flow --flow-file=flows/liquibase-rollback.flowfile.yaml
    
-            echo "==> Liquibase history (before)"
-            "${LB_BIN}" --log-level=info history \
-              2>&1 | tee "${ART_DIR}/liquibase_history_before.log"
-   
-            echo "==> Liquibase rollbackCount ${ROLLBACK_COUNT}"
-            "${LB_BIN}" --log-level=info rollbackCount "${ROLLBACK_COUNT}" \
-              1> "${ART_DIR}/liquibase_rollback.out" \
-              2> "${ART_DIR}/liquibase_rollback.err" || {
-                echo "Rollback failed. Tail error:"
-                tail -n 200 "${ART_DIR}/liquibase_rollback.err" || true
-                exit 1
-              }
-   
-            echo "==> Liquibase history (after)"
-            "${LB_BIN}" --log-level=info history \
-              2>&1 | tee "${ART_DIR}/liquibase_history_after.log"
-   
-            # HTML report (optional but enabled here)
-            "${LB_BIN}" --log-level=info \
-              --reports-enabled=true \
-              --report-path="${ART_DIR}/liquibase_history_after.html" \
-              "${common_args[@]}" history >/dev/null
+            # echo "==> Liquibase rollbackCount ${ROLLBACK_COUNT}"
+            # "${LB_BIN}" --log-level=info rollbackCount "${ROLLBACK_COUNT}" \
+            #   1> "${ART_DIR}/liquibase_rollback.out" \
+            #   2> "${ART_DIR}/liquibase_rollback.err" || {
+            #     echo "Rollback failed. Tail error:"
+            #     tail -n 200 "${ART_DIR}/liquibase_rollback.err" || true
+            #     exit 1
+            #   }
        
       - name: Upload Liquibase artifacts (logs)
         if: always()

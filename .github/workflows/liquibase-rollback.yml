@@ -241,8 +241,8 @@ jobs:
               exit 1
             fi
    
-            if [ ! -f "${WORKDIR}/${CHANGELOG_FILE}" ]; then
-              echo "ERROR: No existe changelog ${WORKDIR}/${CHANGELOG_FILE}"
+            if [ ! -f "${WORKDIR}/${LIQUIBASE_COMMAND_CHANGELOG_FILE}" ]; then
+              echo "ERROR: No existe changelog ${WORKDIR}/${LIQUIBASE_COMMAND_CHANGELOG_FILE}"
               ls -la "${WORKDIR}" || true
               exit 1
             fi

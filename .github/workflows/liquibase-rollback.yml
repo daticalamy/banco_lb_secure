@@ -228,10 +228,6 @@ jobs:
         shell: bash
         run: |
             set -euo pipefail
-   
-            LIQUIBASE_COMMAND_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
-            LIQUIBASE_COMMAND_USERNAME="${DB_USER}"
-            LIQUIBASE_COMMAND_PASSWORD="${DB_PASSWORD}"
 
             if [ "${ROLLBACK_COUNT}" -lt 1 ]; then
               echo "ERROR: rollback_count debe ser >= 1"
@@ -258,6 +254,9 @@ jobs:
             ART_DIR="${RUNNER_TEMP}/artifacts"
             mkdir -p "${ART_DIR}"
             export ART_DIR="${ART_DIR}"
+            export LIQUIBASE_COMMAND_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
+            export LIQUIBASE_COMMAND_USERNAME="${DB_USER}"
+            export LIQUIBASE_COMMAND_PASSWORD="${DB_PASSWORD}"
    
             cd "${WORKDIR}"
             liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml

@@ -16,13 +16,13 @@ on:
         description: "Tipo de reversión"
         required: true
         type: choice
-        options: [rollback_count,rollback_to_tag,rollback_one_changeset]
+        options: [rollback_count,rollback_one_deployment,rollback_one_changeset]
       rollback_count:
         description: "Cantidad de changesets a revertir (rollback count)"
         required: false
         type: number
-      rollback_tag:
-        description: "Etiqueta para reversión (rollback to tag)"
+      rollback_deployment_id:
+        description: "ID de despliegue para reversión (rollback one deployment)"
         required: false
         type: string
       rollback_changeset_id:
@@ -57,7 +57,7 @@ env:
   LIQUIBASE_LOG_LEVEL: "INFO"
   ROLLBACK_TYPE: ${{ inputs.rollback_type }}
   ROLLBACK_COUNT: ${{ inputs.rollback_count }}
-  ROLLBACK_TAG: ${{ inputs.rollback_tag }}
+  ROLLBACK_DEPLOYMENT_ID: ${{ inputs.rollback_deployment_id }}
   ROLLBACK_CHANGESET_ID: ${{ inputs.rollback_changeset_id }}
   ROLLBACK_CHANGESET_AUTHOR: ${{ inputs.rollback_changeset_author }}
   ROLLBACK_CHANGESET_PATH: ${{ inputs.rollback_changeset_path }}
@@ -113,18 +113,8 @@ jobs:
               echo "ERROR: ROLLBACK_COUNT must be a number >= 1."
               exit 1
             fi
-          elif [ "${ROLLBACK_TYPE}" == "rollback_to_tag" ]; then
-            echo "Rollback to tag: ${ROLLBACK_TAG}"
-            if [ -z "${ROLLBACK_TAG}" ]; then
-              echo "ERROR: ROLLBACK_TAG must not be empty."
-              exit 1
-            fi
-          elif [ "${ROLLBACK_TYPE}" == "rollback_one_changeset" ]; then
-            echo "Rollback one changeset - Author: ${ROLLBACK_CHANGESET_AUTHOR}, ID: ${ROLLBACK_CHANGESET_ID}, Path: ${ROLLBACK_CHANGESET_PATH}"
-            if [ -z "${ROLLBACK_CHANGESET_AUTHOR}" ] || [ -z "${ROLLBACK_CHANGESET_ID}" ] || [ -z "${ROLLBACK_CHANGESET_PATH}" ]; then
-              echo "ERROR: ROLLBACK_CHANGESET_AUTHOR, ROLLBACK_CHANGESET_ID, and ROLLBACK_CHANGESET_PATH must all be non-empty."
-              exit 1
-            fi
+          elif [ "${ROLLBACK_TYPE}" == "rollback_one_deployment" ]; then
+            echo "Rollback one deployment - ID: ${ROLLBACK_DEPLOYMENT_ID}"
           else
             echo "ERROR: Invalid rollback type '${ROLLBACK_TYPE}'. Must be one of: rollback_count, rollback_to_tag, rollback_one_changeset."
             exit 1

@@ -267,11 +267,6 @@ jobs:
         shell: bash
         run: |
             set -euo pipefail
-
-            if [ "${ROLLBACK_COUNT}" -lt 1 ]; then
-              echo "ERROR: rollback_count debe ser >= 1"
-              exit 1
-            fi
    
             # Normaliza a nombre de carpeta (evita espacios / caracteres raros)
             DB_DIR="$(echo "${DB_NAME}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g')"

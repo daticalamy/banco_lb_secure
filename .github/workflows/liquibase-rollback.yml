@@ -109,7 +109,11 @@ jobs:
           
           if [ "${ROLLBACK_TYPE}" == "rollback_count" ]; then
             echo "Rollback count: ${ROLLBACK_COUNT}"
-            if [ -z "${ROLLBACK_COUNT}" ] || { [ -n "${ROLLBACK_COUNT}" ] && [ "${ROLLBACK_COUNT}" -lt 1 ]; }; then
+            if [ -z "${ROLLBACK_COUNT}" ]; then
+              echo "ERROR: ROLLBACK_COUNT must not be empty."
+              exit 1
+            fi
+            if [ "${ROLLBACK_COUNT}" -lt 1 ]; then
               echo "ERROR: ROLLBACK_COUNT must be a number >= 1."
               exit 1
             fi

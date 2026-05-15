@@ -81,6 +81,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+    
+      - uses: liquibase/setup-liquibase@v2
+        with:
+          version: '5.1.1'
+          edition: 'secure'
  
       - name: Install jq (if needed)
         shell: bash
@@ -127,14 +132,15 @@ jobs:
             exit 1
           fi
  
-      - name: "Sanity check Liquibase + JDBC"
+      - name: "Sanity check Liquibase"
         shell: bash
         run: |
           
           set -euo pipefail
-          
-          test -x "${LB_BIN}"
-          "${LB_BIN}" --version
+          liquibase -v
+
+          # test -x "${LB_BIN}"
+          # "${LB_BIN}" --version
  
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -294,7 +300,8 @@ jobs:
             export LIQUIBASE_COMMAND_PASSWORD="${DB_PASSWORD}"
    
             cd "${WORKDIR}"
-            "${LB_BIN}" flow --flow-file=../liquibase-rollback.flowfile.yaml 2>&1 | tee ${ART_DIR}/liquibase_rollback.log
+            # "${LB_BIN}" flow --flow-file=../liquibase-rollback.flowfile.yaml 2>&1 | tee ${ART_DIR}/liquibase_rollback.log
+            liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml 2>&1 | tee ${ART_DIR}/liquibase_rollback.log
        
       - name: Upload Liquibase artifacts (logs)
         if: always()

@@ -294,7 +294,7 @@ jobs:
             export LIQUIBASE_COMMAND_PASSWORD="${DB_PASSWORD}"
    
             cd "${WORKDIR}"
-            liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml 2>&1 | tee ${ART_DIR}/liquibase_rollback.log
+            "${LB_BIN}" flow --flow-file=../liquibase-rollback.flowfile.yaml 2>&1 | tee ${ART_DIR}/liquibase_rollback.log
        
       - name: Upload Liquibase artifacts (logs)
         if: always()

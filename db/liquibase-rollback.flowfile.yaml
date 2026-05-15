@@ -16,7 +16,7 @@ stages:
     actions:
       - type: shell
         command: | 
-          liquibase --mirror-output-to-console=true history --output-file="${ART_DIR}/liquibase_history_before.log"
+          liquibase history --output-file="${ART_DIR}/liquibase_history_before.log"
 
   Rollback-Count:
     actions:
@@ -57,4 +57,4 @@ endStage:
   
     - type: shell
       command: | 
-        liquibase --mirror-output-to-console=true history --output-file="${ART_DIR}/liquibase_history_after.log"
+        liquibase history --output-file="${ART_DIR}/liquibase_history_after.log"

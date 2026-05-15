@@ -293,16 +293,7 @@ jobs:
             export LIQUIBASE_COMMAND_PASSWORD="${DB_PASSWORD}"
    
             cd "${WORKDIR}"
-            liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml >> ${ART_DIR}/liquibase_rollback.log 2>&1
-   
-            # echo "==> Liquibase rollbackCount ${ROLLBACK_COUNT}"
-            # "${LB_BIN}" --log-level=info rollbackCount "${ROLLBACK_COUNT}" \
-            #   1> "${ART_DIR}/liquibase_rollback.out" \
-            #   2> "${ART_DIR}/liquibase_rollback.err" || {
-            #     echo "Rollback failed. Tail error:"
-            #     tail -n 200 "${ART_DIR}/liquibase_rollback.err" || true
-            #     exit 1
-            #   }
+            liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml 2>&1 | tee ${ART_DIR}/liquibase_rollback.log
        
       - name: Upload Liquibase artifacts (logs)
         if: always()

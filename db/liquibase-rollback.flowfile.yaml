@@ -54,6 +54,11 @@ stages:
 
 endStage:
   actions:
-  - type: liquibase
-    command: history
-    # globalArgs: { output-file: "${ART_DIR}/liquibase_history_after.log" }
+  #- type: liquibase
+  #  command: history
+  #  # globalArgs: { output-file: "${ART_DIR}/liquibase_history_after.log" }
+  
+  - type: shell
+    command: | 
+      echo "ART_DIR=${ART_DIR}"
+      liquibase history --output-file="${ART_DIR}/liquibase_history_after.log" --mirror-output-to-console=true

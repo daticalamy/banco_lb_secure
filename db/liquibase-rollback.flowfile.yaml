@@ -14,9 +14,9 @@ stages:
 
   History-before-Rollback:
     actions:
-      - type: liquibase
-        command: history
-        globalArgs: { output-file: "${ART_DIR}/liquibase_history_before.log" }
+      - type: shell
+        command: | 
+          liquibase --mirror-output-to-console=true history --output-file="${ART_DIR}/liquibase_history_before.log"
 
   Rollback-Count:
     actions:
@@ -54,11 +54,7 @@ stages:
 
 endStage:
   actions:
-  #- type: liquibase
-  #  command: history
-  #  # globalArgs: { output-file: "${ART_DIR}/liquibase_history_after.log" }
   
-  - type: shell
-    command: | 
-      echo "ART_DIR=${ART_DIR}"
-      liquibase --mirror-output-to-console=true history --output-file="${ART_DIR}/liquibase_history_after.log"
+    - type: shell
+      command: | 
+        liquibase --mirror-output-to-console=true history --output-file="${ART_DIR}/liquibase_history_after.log"

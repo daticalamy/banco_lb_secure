@@ -298,7 +298,7 @@ jobs:
             export LIQUIBASE_COMMAND_PASSWORD="${DB_PASSWORD}"
    
             cd "${WORKDIR}"
-            liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml
+            liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml >> ${ART_DIR}/liquibase_rollback.log 2>&1
    
             # echo "==> Liquibase rollbackCount ${ROLLBACK_COUNT}"
             # "${LB_BIN}" --log-level=info rollbackCount "${ROLLBACK_COUNT}" \

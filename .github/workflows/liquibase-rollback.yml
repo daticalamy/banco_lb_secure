@@ -46,7 +46,6 @@ env:
   # ASmith: Modified BIN
   DB_NAME: ${{ inputs.db_name }}
   TARGET_ENV: ${{ inputs.target_env }}
-  LB_BIN: "/opt/liquibase/liquibase/liquibase"
   LIQUIBASE_SEARCH_PATH: "."
   LIQUIBASE_COMMAND_CHANGELOG_FILE: "liquibase_master.xml"
   LIQUIBASE_COMMAND_DEFAULT_SCHEMA_NAME: "public"
@@ -138,9 +137,6 @@ jobs:
           
           set -euo pipefail
           liquibase -v
-
-          # test -x "${LB_BIN}"
-          # "${LB_BIN}" --version
  
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -292,7 +288,7 @@ jobs:
               exit 1
             fi
    
-            ART_DIR="${RUNNER_TEMP}/artifacts"
+            ART_DIR="reports"
             mkdir -p "${ART_DIR}"
             export ART_DIR="${ART_DIR}"
             export LIQUIBASE_COMMAND_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
@@ -300,7 +296,6 @@ jobs:
             export LIQUIBASE_COMMAND_PASSWORD="${DB_PASSWORD}"
    
             cd "${WORKDIR}"
-            # "${LB_BIN}" flow --flow-file=../liquibase-rollback.flowfile.yaml 2>&1 | tee ${ART_DIR}/liquibase_rollback.log
             liquibase flow --flow-file=../liquibase-rollback.flowfile.yaml 2>&1 | tee ${ART_DIR}/liquibase_rollback.log
        
       - name: Upload Liquibase artifacts (logs)
@@ -308,5 +303,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: liquibase-rollback-artifacts
-          path: ${{ runner.temp }}/artifacts
+          path: reports
           if-no-files-found: warn

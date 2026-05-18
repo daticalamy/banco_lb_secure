@@ -43,7 +43,6 @@ permissions:
   contents: read
 
 env:
-  # ASmith: Modified BIN
   DB_NAME: ${{ inputs.db_name }}
   TARGET_ENV: ${{ inputs.target_env }}
   LIQUIBASE_SEARCH_PATH: "."
@@ -288,7 +287,6 @@ jobs:
               exit 1
             fi
    
-            cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
             ART_DIR="${RUNNER_TEMP}/artifacts"
             mkdir -p "${ART_DIR}"
 

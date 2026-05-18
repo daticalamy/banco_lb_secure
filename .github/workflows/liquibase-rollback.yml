@@ -288,8 +288,10 @@ jobs:
               exit 1
             fi
    
-            ART_DIR="reports"
+            cd "${GITHUB_WORKSPACE}/db/${DB_NAME}"
+            ART_DIR="${RUNNER_TEMP}/artifacts"
             mkdir -p "${ART_DIR}"
+
             export ART_DIR="${ART_DIR}"
             export LIQUIBASE_COMMAND_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}"
             export LIQUIBASE_COMMAND_USERNAME="${DB_USER}"
@@ -303,5 +305,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: liquibase-rollback-artifacts
-          path: reports
+          path: ${{ runner.temp }}/artifacts
           if-no-files-found: warn

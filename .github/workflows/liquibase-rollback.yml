@@ -272,7 +272,10 @@ jobs:
 
       - name: Rollback (history before + rollback + history after)
         shell: bash
+        env:
+          LIQUIBASE_TMPDIR: "${{ runner.temp }}/liquibase-tmp"
         run: |
+            mkdir -p "${{ runner.temp }}/liquibase-tmp"
             set -euo pipefail
    
             # Normaliza a nombre de carpeta (evita espacios / caracteres raros)

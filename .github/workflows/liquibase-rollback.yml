@@ -273,7 +273,7 @@ jobs:
       - name: Rollback (history before + rollback + history after)
         shell: bash
         env:
-          LIQUIBASE_TMPDIR: "${{ runner.temp }}/liquibase-tmp"
+          JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}/liquibase-tmp"
         run: |
             mkdir -p "${{ runner.temp }}/liquibase-tmp"
             set -euo pipefail

@@ -69,6 +69,11 @@ jobs:
     timeout-minutes: 60
 
     steps:
+
+      - name: Simulate noexec on /tmp (reproduce customer issue)
+        shell: bash
+        run: sudo mount -o remount,noexec /tmp
+    
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -305,3 +310,8 @@ jobs:
           name: liquibase-rollback-artifacts
           path: ${{ runner.temp }}/artifacts
           if-no-files-found: warn
+
+      - name: Restore /tmp exec (cleanup)
+        if: always()
+        shell: bash
+        run: sudo mount -o remount,exec /tmp
